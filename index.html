@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10151c">
+<title>JANI - Your AI Friend</title>
+<style>
+:root{color-scheme:dark;--bg:#10151c;--panel:#19212b;--panel2:#222d39;--text:#f3f6fa;--muted:#9baaba;--accent:#8b7cff;--line:#303b48}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Arial,sans-serif}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{height:100dvh;max-width:900px;margin:auto;display:flex;flex-direction:column;background:var(--bg)}
+header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);background:var(--panel)}
+.logo{width:44px;height:44px;border-radius:15px;background:linear-gradient(135deg,#9a8cff,#5e49d8);display:grid;place-items:center;font-size:23px;font-weight:900;color:white}
+.brand{flex:1}.brand h1{font-size:20px;margin:0}.brand p{font-size:12px;color:var(--muted);margin:3px 0 0}
+.smallbtn{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:9px 11px}
+.settings{padding:12px 14px;background:var(--panel);border-bottom:1px solid var(--line);display:none;gap:9px;flex-wrap:wrap}
+.settings.show{display:flex}
+.settings input,.settings select{min-width:0;flex:1;background:var(--bg);color:var(--text);border:1px solid var(--line);padding:10px;border-radius:10px}
+.chat{flex:1;overflow-y:auto;padding:20px 14px;display:flex;flex-direction:column;gap:15px;scroll-behavior:smooth}
+.welcome{margin:auto 0;text-align:center;padding:22px 12px}
+.welcome .big{font-size:54px}.welcome h2{font-size:26px;margin:8px 0}.welcome p{color:var(--muted);line-height:1.65;max-width:470px;margin:8px auto 18px}
+.suggestions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.suggestions button{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:18px;padding:9px 12px}
+.msg{display:flex;gap:9px;align-items:flex-start;max-width:88%;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.avatar{width:32px;height:32px;flex-shrink:0;border-radius:11px;background:var(--panel2);display:grid;place-items:center;font-size:15px}
+.msg.user .avatar{background:#5d4bcb}
+.bubble{padding:11px 14px;border-radius:5px 17px 17px 17px;background:var(--panel);border:1px solid var(--line)}
+.msg.user .bubble{background:#5142a9;border-color:#5142a9;border-radius:17px 5px 17px 17px}
+.msg.error .bubble{border-color:#9e5555}
+.composer{padding:12px;background:var(--panel);border-top:1px solid var(--line)}
+.tools{display:flex;gap:8px;align-items:center;margin-bottom:9px}
+.tools button{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:7px 11px;border-radius:18px;font-size:12px}
+.tools button.active{background:#5142a9;border-color:#8b7cff}
+.entry{display:flex;align-items:flex-end;gap:9px}
+#prompt{flex:1;min-width:0;max-height:140px;resize:none;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:17px;padding:13px;outline:none}
+#send{background:var(--accent);border:0;color:white;border-radius:15px;padding:13px 16px;font-weight:700;min-height:47px}
+#send:disabled{opacity:.5}
+.foot{text-align:center;color:var(--muted);font-size:11px;padding-top:8px}
+.typing{color:var(--muted);font-size:13px;padding-left:42px}
+@media(min-width:700px){.app{height:100dvh;border-left:1px solid var(--line);border-right:1px solid var(--line)}.chat{padding:24px}.composer{padding:14px 20px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">J</div>
+  <div class="brand">
+    <h1>JANI</h1>
+    <p id="status">Tumhara AI dost · Online-style chat</p>
+  </div>
+  <button class="smallbtn" id="settingsBtn" aria-label="Settings">⚙</button>
+  <button class="smallbtn" id="clearBtn" aria-label="New chat">＋</button>
+</header>
+
+<section class="settings" id="settings">
+  <input id="userName" maxlength="40" placeholder="Tumhara naam (optional)">
+  <select id="tone" aria-label="JANI ka andaaz">
+    <option value="friend">Dostana</option>
+    <option value="roast">Roast mode 😈</option>
+    <option value="calm">Serious aur supportive</option>
+  </select>
+  <button class="smallbtn" id="saveSettings">Save</button>
+</section>
+
+<main class="chat" id="chat" aria-live="polite">
+  <div class="welcome" id="welcome">
+    <div class="big">🤝</div>
+    <h2>Assalam-o-alaikum! Main JANI.</h2>
+    <p>Ek samajhdar AI dost. Tum jis zaban mein baat karoge, main usi zaban mein jawab dene ki koshish karunga. Mazaq, roast, ideas ya serious baat—bolo, kya scene hai?</p>
+    <div class="suggestions">
+      <button data-msg="Apna introduction do">Apna intro do 👋</button>
+      <button data-msg="Mujhe mazedar roast karo">Roast me 😈</button>
+      <button data-msg="Mujhe koi nayi skill sikhao">Kuch sikhao 🧠</button>
+    </div>
+  </div>
+</main>
+
+<div class="composer">
+  <div class="tools">
+    <button id="roastBtn">😈 Roast: Off</button>
+    <button id="seriousBtn">💙 Serious mode</button>
+  </div>
+  <div class="entry">
+    <textarea id="prompt" rows="1" maxlength="6000" placeholder="JANI se baat karo..." aria-label="Message"></textarea>
+    <button id="send">Send ➤</button>
+  </div>
+  <div class="foot">JANI AI · AI kabhi kabhi ghalat bhi ho sakti hai</div>
+</div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const chat = $("chat");
+  const promptBox = $("prompt");
+  const sendBtn = $("send");
+  const status = $("status");
+  const welcome = $("welcome");
+
+  let history = [];
+  let busy = false;
+  let mode = localStorage.getItem("jani_mode") || "friend";
+  $("tone").value = mode;
+  $("userName").value = localStorage.getItem("jani_user_name") || "";
+
+  function savePrefs() {
+    localStorage.setItem("jani_user_name", $("userName").value.trim());
+    localStorage.setItem("jani_mode", $("tone").value);
+    mode = $("tone").value;
+    updateModeButtons();
+  }
+
+  function updateModeButtons() {
+    $("roastBtn").classList.toggle("active", mode === "roast");
+    $("seriousBtn").classList.toggle("active", mode === "calm");
+    $("roastBtn").textContent = mode === "roast" ? "😈 Roast: On" : "😈 Roast: Off";
+  }
+
+  function addMessage(role, text, extraClass = "") {
+    if (welcome && welcome.isConnected) welcome.remove();
+
+    const wrap = document.createElement("div");
+    wrap.className = "msg " + (role === "user" ? "user " : "") + extraClass;
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = role === "user" ? "🙂" : "J";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+
+    wrap.append(avatar, bubble);
+    chat.appendChild(wrap);
+    chat.scrollTop = chat.scrollHeight;
+    return wrap;
+  }
+
+  function setMode(next) {
+    mode = next;
+    $("tone").value = next;
+    savePrefs();
+  }
+
+  function systemContext() {
+    const name = $("userName").value.trim();
+    let personality = "";
+
+    if (mode === "roast") {
+      personality = "Is waqt playful roast mode hai: witty, creative, funny aur context-based mazaq karo. User ki tauheen, nafrat, dhamki ya sensitive personal cheezon par hamla mat karo. User dukhi, pareshan ya serious ho to roast rok kar support do.";
+    } else if (mode === "calm") {
+      personality = "Is waqt serious aur supportive raho. Narmi se samjhao, mazaq ya roast mat karo jab tak user khud na kahe.";
+    } else {
+      personality = "Dost ki tarah natural, samajhdar, friendly aur zarurat par funny raho. Har baat par roast mat karo.";
+    }
+
+    return [
+      "Tumhara naam JANI hai. User tumhein JANI kahe to bas kaho: 'Haan, mera naam JANI hai 😊'. Apne aap ko JANI 2 mat kaho.",
+      "Tum AI ho, insan nahi. Tumhari koi fixed gender identity nahi. Apne liye gender-neutral alfaaz istemal karo jahan mumkin ho; user jis conversational style mein baat kare, us ke mutabiq tone adapt karo, lekin jhoota insani gender ya zindagi ka dawa mat karo.",
+      "User ki zaban pehchano aur usi zaban mein jawab do. Urdu, Roman Urdu, English, Sindhi, Arabic aur doosri zabanon ko support karne ki koshish karo. User language badle to tum bhi badlo.",
+      "GPT jaisi wazeh, samajhdar, tafseeli magar natural madad do. Maloom na ho to sach batao, facts ya yaadein mat ghadho. User ke bataye hue naam ko izzat se istemal karo.",
+      "User ke naam ko sirf tab istemal karo jab woh khud bataye. Agar naam khali ho to naam mat ghadho.",
+      personality,
+      name ? "User ka pasandeeda naam: " + name + ". Munasib jagah isi naam se mukhatib ho." : "User ne abhi apna naam nahi bataya.",
+      "Agar user apna naam ya preference bataye, conversation mein usay yaad rakhne ki koshish karo. App ke naye session mein sirf woh preferences available hongi jo app ne save ki hon."
+    ].join("\n");
+  }
+
+  async function sendMessage(text) {
+    text = text.trim();
+    if (!text || busy) return;
+
+    busy = true;
+    sendBtn.disabled = true;
+    status.textContent = "JANI soch raha hai...";
+    addMessage("user", text);
+    history.push({ role: "user", content: text });
+
+    const typing = document.createElement("div");
+    typing.className = "typing";
+    typing.textContent = "JANI soch raha hai…";
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: history.slice(-24),
+          system: systemContext()
+        })
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Server se jawab nahi mila. API setup check karna hoga.");
+      }
+
+      const answer = data.reply || data.message || data.content;
+      if (typeof answer !== "string" || !answer.trim()) {
+        throw new Error("AI ka jawab khali mila. Dobara koshish karo.");
+      }
+
+      history.push({ role: "assistant", content: answer });
+      addMessage("assistant", answer);
+    } catch (err) {
+      history.pop();
+      addMessage("assistant", "Bhai, abhi AI server se connection nahi hua. Is nayi website mein /api/chat server file aur Vercel par Groq API key setup karna abhi baqi hai. Error: " + (err.message || "Connection error"), "error");
+    } finally {
+      typing.remove();
+      busy = false;
+      sendBtn.disabled = false;
+      status.textContent = "Tumhara AI dost · Ready";
+      promptBox.focus();
+    }
+  }
+
+  sendBtn.addEventListener("click", () => {
+    const text = promptBox.value;
+    promptBox.value = "";
+    promptBox.style.height = "auto";
+    sendMessage(text);
+  });
+
+  promptBox.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      sendBtn.click();
+    }
+  });
+
+  promptBox.addEventListener("input", () => {
+    promptBox.style.height = "auto";
+    promptBox.style.height = Math.min(promptBox.scrollHeight, 140) + "px";
+  });
+
+  $("settingsBtn").addEventListener("click", () => {
+    $("settings").classList.toggle("show");
+  });
+
+  $("saveSettings").addEventListener("click", () => {
+    savePrefs();
+    $("settings").classList.remove("show");
+    addMessage("assistant", "Theek hai! Preferences save ho gayi hain 😊");
+  });
+
+  $("roastBtn").addEventListener("click", () => {
+    setMode(mode === "roast" ? "friend" : "roast");
+  });
+
+  $("seriousBtn").addEventListener("click", () => {
+    setMode(mode === "calm" ? "friend" : "calm");
+  });
+
+  $("clearBtn").addEventListener("click", () => {
+    if (busy) return;
+    history = [];
+    chat.replaceChildren();
+    const panel = document.createElement("div");
+    panel.className = "welcome";
+    panel.innerHTML = '<div class="big">🤝</div><h2>Nayi chat, nayi baat!</h2><p>Bolo, aaj kya discuss karein?</p>';
+    chat.appendChild(panel);
+    status.textContent = "Tumhara AI dost · Ready";
+  });
+
+  document.querySelectorAll("[data-msg]").forEach(button => {
+    button.addEventListener("click", () => sendMessage(button.dataset.msg));
+  });
+
+  updateModeButtons();
+})();
+</script>
+</body>
+  </html>
+    
