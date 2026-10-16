@@ -7,7 +7,7 @@
 <title>JANI - Your AI Friend</title>
 <style>
 :root{color-scheme:dark;--bg:#10151c;--panel:#19212b;--panel2:#222d39;--text:#f3f6fa;--muted:#9baaba;--accent:#8b7cff;--line:#303b48}
-*{box-scheme:border-box;box-sizing:border-box}
+*{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Arial,sans-serif}
 button,input,textarea{font:inherit}
 button{cursor:pointer}
@@ -50,7 +50,7 @@ header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:
   <div class="logo">J</div>
   <div class="brand">
     <h1>JANI</h1>
-    <p id="status">Tumhara AI dost · Ready</p>
+    <p id="status">Tumhara AI dost · Online-style chat</p>
   </div>
   <button class="smallbtn" id="settingsBtn" aria-label="Settings">⚙</button>
   <button class="smallbtn" id="clearBtn" aria-label="New chat">＋</button>
@@ -96,6 +96,9 @@ header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:
 (() => {
   "use strict";
 
+  // ⚠️ APNI ASLI GROQ API KEY IN INVERTED COMMAS KE ANDAR PASTE KAREIN
+  const GROQ_KEY = "gsk_YAHAN_APNI_ASLI_KEY_PASTE_KAREIN";
+
   const $ = id => document.getElementById(id);
   const chat = $("chat");
   const promptBox = $("prompt");
@@ -106,8 +109,9 @@ header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:
   let history = [];
   let busy = false;
   let mode = localStorage.getItem("jani_mode") || "friend";
-  $("tone").value = mode;
-  $("userName").value = localStorage.getItem("jani_user_name") || "";
+  
+  if($("tone")) $("tone").value = mode;
+  if($("userName")) $("userName").value = localStorage.getItem("jani_user_name") || "";
 
   function savePrefs() {
     localStorage.setItem("jani_user_name", $("userName").value.trim());
@@ -117,9 +121,9 @@ header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:
   }
 
   function updateModeButtons() {
-    $("roastBtn").classList.toggle("active", mode === "roast");
-    $("seriousBtn").classList.toggle("active", mode === "calm");
-    $("roastBtn").textContent = mode === "roast" ? "😈 Roast: On" : "😈 Roast: Off";
+    if($("roastBtn")) $("roastBtn").classList.toggle("active", mode === "roast");
+    if($("seriousBtn")) $("seriousBtn").classList.toggle("active", mode === "calm");
+    if($("roastBtn")) $("roastBtn").textContent = mode === "roast" ? "😈 Roast: On" : "😈 Roast: Off";
   }
 
   function addMessage(role, text, extraClass = "") {
@@ -144,7 +148,7 @@ header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:
 
   function setMode(next) {
     mode = next;
-    $("tone").value = next;
+    if($("tone")) $("tone").value = next;
     savePrefs();
   }
 
@@ -193,16 +197,7 @@ header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": "Bearer gsk_APNI_ASLI_KEY_YAHAN_DALEIN"
+          "Authorization": "Bearer " + GROQ_KEY
         },
         body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            { role: "system", content: systemContext() },
-            ...history.slice(-24)
-          ]
-        })
-      });
-
-      const data = await response.json();
-    
+  
